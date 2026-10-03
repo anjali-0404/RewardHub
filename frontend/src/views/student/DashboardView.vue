@@ -54,19 +54,25 @@
             </button>
           </div>
         </div>
+
+        <!-- Faculty Recognition / Achievements Section -->
+        <FacultyRecognitions ref="recognitionsRef" />
       </main>
     </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import AppHeader from "@/components/common/AppHeader.vue";
 import AppSidebar from "@/components/common/AppSidebar.vue";
 import StudentDetails from "@/components/student/StudentDetails.vue";
+import FacultyRecognitions from "@/components/student/FacultyRecognitions.vue";
 import RefreshIcon from "@/components/icons/RefreshIcon.vue";
 import { useWalletStore } from "@/stores/wallet";
 import { getErrorMessage } from "@/utils/errorHandler";
+
+const recognitionsRef = ref(null);
 
 const walletStore = useWalletStore();
 

@@ -9,8 +9,12 @@ export const useWalletStore = defineStore("wallet", () => {
   const address = ref(null);
   const balance = ref(0);
   const blockchainBalance = ref(0);
+  const totalEarned = ref(0);
+  const totalSpent = ref(0);
   const databaseRedemptions = ref(0);
   const balanceBreakdown = ref(null);
+  const balanceSource = ref(null);
+  const transactions = ref([]);
   const loading = ref(false);
   const refreshing = ref(false);
   const error = ref(null);
@@ -108,22 +112,29 @@ export const useWalletStore = defineStore("wallet", () => {
     }
   }
 
-  // Fetch token balance (calculated with database redemptions)
+  // Fetch token balance (blockchain with database fallback — never zeros out on chain errors)
   async function fetchBalance(isManualRefresh = false) {
-    if (!address.value) return;
-
     try {
       if (isManualRefresh) {
         refreshing.value = true;
       }
 
-      // Fetch calculated balance instead of just blockchain balance
+      // Calculated balance always returns 200 with DB fallback
       const data = await walletService.getCalculatedBalance();
 
-      balance.value = data.availableBalance || 0;
-      blockchainBalance.value = data.blockchainBalance || 0;
-      databaseRedemptions.value = data.databaseRedemptions || 0;
-      balanceBreakdown.value = data.breakdown;
+      balance.value = data.availableBalance ?? 0;
+      blockchainBalance.value = data.blockchainBalance ?? 0;
+      totalEarned.value = data.totalEarned ?? 0;
+      totalSpent.value = data.totalSpent ?? 0;
+      databaseRedemptions.value = data.databaseRedemptions ?? 0;
+      balanceBreakdown.value = data.breakdown ?? null;
+      balanceSource.value = data.balanceSource ?? null;
+
+      // Keep header/user wallet state in sync without forcing a reconnect
+      if (data.walletAddress) {
+        address.value = data.walletAddress;
+        connected.value = !!data.walletConnected;
+      }
 
       return data;
     } catch (err) {
@@ -134,12 +145,25 @@ export const useWalletStore = defineStore("wallet", () => {
         throw err;
       }
 
-      // Silent fail for automatic fetches - balance fetch is non-critical
-      balance.value = 0;
+      // Silent fail for automatic fetches: preserve last known balance
+      // instead of flashing 0 (balance fetch is non-critical)
     } finally {
       if (isManualRefresh) {
         refreshing.value = false;
       }
+    }
+  }
+
+  // Fetch unified transaction history (earnings + redemptions)
+  async function fetchTransactions() {
+    try {
+      const data = await walletService.getTransactions();
+      transactions.value = data.transactions || [];
+      if (typeof data.totalEarned === "number") totalEarned.value = data.totalEarned;
+      return data;
+    } catch (err) {
+      console.error("Error fetching transactions:", err);
+      return null;
     }
   }
 
@@ -167,8 +191,12 @@ export const useWalletStore = defineStore("wallet", () => {
     address,
     balance,
     blockchainBalance,
+    totalEarned,
+    totalSpent,
     databaseRedemptions,
     balanceBreakdown,
+    balanceSource,
+    transactions,
     loading,
     refreshing,
     error,
@@ -177,6 +205,7 @@ export const useWalletStore = defineStore("wallet", () => {
     connect,
     disconnect,
     fetchBalance,
+    fetchTransactions,
     setupListeners,
   };
 });

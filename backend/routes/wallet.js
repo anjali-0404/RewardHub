@@ -26,6 +26,11 @@ router.post("/disconnect", walletController.disconnectWallet);
 // @access  Protected
 router.get("/calculated-balance", walletController.getCalculatedBalance);
 
+// @route   GET /api/users/wallet/transactions
+// @desc    Get unified transaction history (earnings + redemptions)
+// @access  Protected
+router.get("/transactions", walletController.getTransactions);
+
 // @route   GET /api/users/wallet/status
 // @desc    Get wallet connection status
 // @access  Protected

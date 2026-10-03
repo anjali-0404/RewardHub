@@ -43,6 +43,7 @@ const navLinks = computed(() => {
     return [
       { path: "/faculty/dashboard", label: "Dashboard", icon: DashboardIcon },
       { path: "/faculty/award", label: "Award", icon: AwardIcon },
+      { path: "/faculty/claims", label: "Review Claims", icon: TrophyIcon },
       {
         path: "/faculty/achievements",
         label: "Achievements",

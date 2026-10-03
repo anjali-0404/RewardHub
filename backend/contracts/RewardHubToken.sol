@@ -43,6 +43,13 @@ contract RewardHubToken is ERC20, Ownable {
     event PerkUpdated(string oldTitle, string newTitle, uint256 newCost);
     event PerkDeactivated(string title);
     event PerkRedeemed(address indexed student, string title, uint256 cost);
+    event FacultyRewardGranted(
+        address indexed student,
+        address indexed faculty,
+        string rewardId,
+        string reason,
+        uint256 amount
+    );
 
     // ========================
     // = Admin Functions      =
@@ -145,5 +152,21 @@ contract RewardHubToken is ERC20, Ownable {
 
     function hasEarned(address student, string calldata title) external view returns (bool) {
         return earned[student][title];
+    }
+
+    function rewardStudent(
+        address student,
+        address faculty,
+        string calldata rewardId,
+        string calldata reason,
+        uint256 amount
+    ) external onlyOwner {
+        if (!isStudent[student]) {
+            isStudent[student] = true;
+            emit StudentRegistered(student);
+        }
+        _mint(student, amount * 1e18);
+        studentAchievements[student].push(reason);
+        emit FacultyRewardGranted(student, faculty, rewardId, reason, amount);
     }
 }

@@ -12,22 +12,35 @@
         <!-- Faculty Activity Stats -->
         <FacultyStats />
 
+        <!-- Quick Faculty Recognition Award -->
+        <QuickAward @award-success="handleAwardSuccess" />
+
         <!-- Faculty Profile Section -->
         <FacultyDetails />
 
         <!-- Recent Activity Feed -->
-        <RecentActivity />
+        <RecentActivity ref="activityRef" />
       </main>
     </div>
   </div>
 </template>
 
 <script setup>
+import { ref } from "vue";
 import AppHeader from "@/components/common/AppHeader.vue";
 import AppSidebar from "@/components/common/AppSidebar.vue";
 import FacultyDetails from "@/components/faculty/FacultyDetails.vue";
 import FacultyStats from "@/components/faculty/FacultyStats.vue";
+import QuickAward from "@/components/faculty/QuickAward.vue";
 import RecentActivity from "@/components/faculty/RecentActivity.vue";
+
+const activityRef = ref(null);
+
+function handleAwardSuccess() {
+  if (activityRef.value?.loadActivity) {
+    activityRef.value.loadActivity();
+  }
+}
 </script>
 
 <style scoped>

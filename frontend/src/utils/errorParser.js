@@ -4,6 +4,33 @@
  * @returns {string} User-friendly error message
  */
 export function parseApiError(error) {
+  if (!error) {
+    return "An unexpected error occurred. Please try again or contact support if the problem persists.";
+  }
+
+  // Handle direct string errors
+  if (typeof error === "string") {
+    return error;
+  }
+
+  // Handle standard Error objects that have a custom message but no HTTP response (e.g. from service handlers)
+  if (!error.response && error.message) {
+    if (
+      error.code === "ERR_NETWORK" ||
+      error.message.includes("Network Error")
+    ) {
+      return "Unable to connect to the server. Please check your internet connection and try again.";
+    }
+    if (
+      error.code === "ECONNABORTED" ||
+      error.message.toLowerCase().includes("timeout")
+    ) {
+      return "The request took too long to complete. Please try again.";
+    }
+    // Return user-friendly message from service layer
+    return error.message;
+  }
+
   // Check if it's an axios error with response data
   if (error.response?.data) {
     const data = error.response.data;
@@ -46,8 +73,8 @@ export function parseApiError(error) {
       }
 
       // Insufficient balance
-      if (msg.includes("not enough tokens") || msg.includes("insufficient")) {
-        return "The student does not have enough tokens for this action.";
+      if (msg.includes("not enough tokens") || msg.includes("insufficient") || msg.includes("Not enough tokens")) {
+        return msg;
       }
 
       // Blockchain errors

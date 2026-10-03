@@ -56,6 +56,16 @@
         </div>
 
         <div class="detail-item">
+          <label>Designation</label>
+          <div class="detail-value">{{ profile.designation || "Faculty Member" }}</div>
+        </div>
+
+        <div class="detail-item">
+          <label>Department</label>
+          <div class="detail-value">{{ profile.department || "Academic Department" }}</div>
+        </div>
+
+        <div class="detail-item">
           <label>Wallet Address</label>
           <div class="detail-value">
             <span v-if="profile.walletAddress" class="monospace">
@@ -90,6 +100,28 @@
           <span v-if="validationErrors.name" class="error-message">
             {{ validationErrors.name }}
           </span>
+        </div>
+
+        <div class="form-group">
+          <label for="designation">Designation</label>
+          <input
+            id="designation"
+            v-model="formData.designation"
+            type="text"
+            class="form-control"
+            placeholder="e.g. Associate Professor"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="department">Department</label>
+          <input
+            id="department"
+            v-model="formData.department"
+            type="text"
+            class="form-control"
+            placeholder="e.g. Computer Science & Engineering"
+          />
         </div>
 
         <div class="form-group">
@@ -154,6 +186,8 @@ const saving = ref(false);
 const formData = reactive({
   name: "",
   walletAddress: "",
+  designation: "",
+  department: "",
 });
 
 const validationErrors = reactive({
@@ -180,6 +214,8 @@ async function fetchProfile() {
 function startEditing() {
   formData.name = profile.value.name;
   formData.walletAddress = profile.value.walletAddress || "";
+  formData.designation = profile.value.designation || "";
+  formData.department = profile.value.department || "";
   validationErrors.name = "";
   validationErrors.walletAddress = "";
   isEditing.value = true;
@@ -242,6 +278,8 @@ async function handleSubmit() {
     const updateData = {
       name: formData.name.trim(),
       walletAddress: formData.walletAddress.trim() || "",
+      designation: formData.designation.trim(),
+      department: formData.department.trim(),
     };
 
     const response = await updateProfile(updateData);

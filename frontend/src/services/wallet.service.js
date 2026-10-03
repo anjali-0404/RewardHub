@@ -37,3 +37,9 @@ export const getCalculatedBalance = async () => {
   const response = await api.get("/users/wallet/calculated-balance");
   return response.data;
 };
+
+// GET /api/users/wallet/transactions
+export const getTransactions = async () => {
+  const response = await api.get("/users/wallet/transactions");
+  return response.data;
+};

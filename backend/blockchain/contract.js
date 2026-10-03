@@ -365,6 +365,50 @@ const grantAchievement = async (studentAddress, achievementTitle) => {
 };
 
 /**
+ * Reward student on blockchain (mints EDU tokens and emits FacultyRewardGranted event)
+ */
+const rewardStudent = async (studentAddress, facultyAddress, rewardId, reason, amount) => {
+  try {
+    console.log(
+      `Awarding student ${studentAddress} ${amount} EDU by ${facultyAddress} for "${reason}" [${rewardId}]`
+    );
+
+    // Ensure student is registered on blockchain first
+    const isReg = await isStudentRegistered(studentAddress);
+    if (!isReg) {
+      console.log(`Auto-registering student ${studentAddress} on blockchain before reward...`);
+      await registerStudent(studentAddress);
+    }
+
+    // Call contract.rewardStudent if available
+    if (typeof contract.rewardStudent === "function") {
+      const txHash = await sendTransactionWithRetry(
+        contract.rewardStudent,
+        [
+          studentAddress,
+          facultyAddress || ethers.ZeroAddress,
+          rewardId,
+          reason,
+          BigInt(Math.floor(amount)),
+        ],
+        `rewardStudent("${studentAddress}", "${facultyAddress}", "${rewardId}", "${reason}", ${amount})`
+      );
+      return txHash;
+    }
+
+    // Fallback: If rewardStudent is not in ABI, grant achievement
+    const exists = await achievementExists(reason);
+    if (!exists) {
+      await addAchievement(reason, amount);
+    }
+    return await grantAchievement(studentAddress, reason);
+  } catch (err) {
+    console.error("Error rewarding student on blockchain:", err);
+    throw new Error(`Blockchain rewardStudent failed: ${err.message}`);
+  }
+};
+
+/**
  * Redeem a perk (burns tokens)
  * Note: Admin wallet redeems on behalf of the student
  */
@@ -540,6 +584,7 @@ module.exports = {
   updatePerk,
   deactivatePerk,
   grantAchievement,
+  rewardStudent,
   mint,
   redeemPerk,
   registerStudent,

@@ -14,6 +14,8 @@ const userSchema = new mongoose.Schema(
     walletAddress: { type: String, default: null },
     walletConnected: { type: Boolean, default: false },
     walletNonce: { type: String, default: null },
+    designation: { type: String, default: "" },
+    department: { type: String, default: "" },
   },
   { timestamps: true }
 );

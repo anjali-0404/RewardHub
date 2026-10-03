@@ -46,6 +46,30 @@ router.post(
   studentAchievementController.logAchievement
 );
 
+// POST /api/student-achievements/claims (Student uploads an achievement claim)
+router.post(
+  "/claims",
+  requireAuth,
+  requireRole("student"),
+  studentAchievementController.submitClaim
+);
+
+// GET /api/student-achievements/claims/pending (Faculty/Admin reviews queue)
+router.get(
+  "/claims/pending",
+  requireAuth,
+  requireRole("faculty", "admin"),
+  studentAchievementController.getPendingClaims
+);
+
+// POST /api/student-achievements/claims/:id/review (Faculty/Admin approves|rejects)
+router.post(
+  "/claims/:id/review",
+  requireAuth,
+  requireRole("faculty", "admin"),
+  studentAchievementController.reviewClaim
+);
+
 // GET /api/student-achievements/:id
 router.get(
   "/:id",

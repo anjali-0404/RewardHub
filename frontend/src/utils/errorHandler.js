@@ -104,7 +104,7 @@ function handleRedemptionError(error) {
       lowerMsg.includes("not enough tokens") ||
       lowerMsg.includes("insufficient")
     ) {
-      return REDEMPTION_ERRORS.INSUFFICIENT_BALANCE;
+      return backendMsg.length < 150 ? backendMsg : REDEMPTION_ERRORS.INSUFFICIENT_BALANCE;
     }
 
     if (

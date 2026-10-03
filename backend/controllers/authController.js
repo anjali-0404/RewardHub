@@ -71,7 +71,7 @@ exports.loginUser = async (req, res) => {
 exports.updateProfile = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { name, walletAddress } = req.body;
+    const { name, walletAddress, designation, department } = req.body;
 
     // Validation
     if (!name || name.trim().length < 2) {
@@ -90,6 +90,13 @@ exports.updateProfile = async (req, res) => {
     const updateData = {
       name: name.trim(),
     };
+
+    if (designation !== undefined) {
+      updateData.designation = designation ? designation.trim() : "";
+    }
+    if (department !== undefined) {
+      updateData.department = department ? department.trim() : "";
+    }
 
     // Validate wallet address if provided
     if (

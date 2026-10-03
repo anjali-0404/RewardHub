@@ -40,3 +40,24 @@ export const deleteStudentAchievement = async (id) => {
   const response = await api.delete(`/student-achievements/${id}`);
   return response.data;
 };
+
+// POST /api/student-achievements/claims (Student uploads an achievement claim)
+export const submitClaim = async (data) => {
+  const response = await api.post("/student-achievements/claims", data);
+  return response.data;
+};
+
+// GET /api/student-achievements/claims/pending (Faculty/Admin review queue)
+export const getPendingClaims = async () => {
+  const response = await api.get("/student-achievements/claims/pending");
+  return response.data;
+};
+
+// POST /api/student-achievements/claims/:id/review (Faculty approves/rejects)
+export const reviewClaim = async (id, { action, reviewNote, tokenReward }) => {
+  const response = await api.post(
+    `/student-achievements/claims/${id}/review`,
+    { action, reviewNote, tokenReward }
+  );
+  return response.data;
+};

@@ -74,6 +74,8 @@ async function seedData() {
         role: "faculty",
         walletAddress: GANACHE_WALLETS[6].toLowerCase(),
         walletConnected: true,
+        designation: "Associate Professor",
+        department: "Computer Science & Engineering",
       },
       {
         name: "Prof. Michael Chen",
@@ -82,6 +84,8 @@ async function seedData() {
         role: "faculty",
         walletAddress: GANACHE_WALLETS[7].toLowerCase(),
         walletConnected: true,
+        designation: "Professor & Department Chair",
+        department: "Information Technology",
       },
       {
         name: "Dr. Emily Rodriguez",
@@ -90,6 +94,8 @@ async function seedData() {
         role: "faculty",
         walletAddress: GANACHE_WALLETS[8].toLowerCase(),
         walletConnected: true,
+        designation: "Assistant Professor",
+        department: "Software Engineering & AI",
       },
     ]);
 

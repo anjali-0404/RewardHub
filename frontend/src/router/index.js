@@ -14,6 +14,7 @@ import ManagePerks from "@/views/admin/ManagePerksView.vue";
 // Faculty views
 import FacultyDashboard from "@/views/faculty/DashboardView.vue";
 import AwardAchievements from "@/views/faculty/AwardAchievementsView.vue";
+import ReviewClaims from "@/views/faculty/ReviewClaimsView.vue";
 
 // Student views
 import StudentDashboard from "@/views/student/DashboardView.vue";
@@ -74,6 +75,12 @@ const routes = [
     path: "/faculty/award",
     name: "AwardAchievements",
     component: AwardAchievements,
+    meta: { requiresAuth: true, role: USER_ROLES.FACULTY },
+  },
+  {
+    path: "/faculty/claims",
+    name: "ReviewClaims",
+    component: ReviewClaims,
     meta: { requiresAuth: true, role: USER_ROLES.FACULTY },
   },
   {

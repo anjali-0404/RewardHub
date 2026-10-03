@@ -90,3 +90,7 @@ coverage/
 dist/
 build/
 out/
+
+# Local MongoDB development runtime
+.mongodb-binaries/
+.mongo-data-test/
