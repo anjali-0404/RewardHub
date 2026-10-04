@@ -33,13 +33,8 @@ const CONFIG = {
 /**
  * Create provider with proper configuration
  */
-function createProvider() {
+function createProvider(rpcUrl) {
   // Use GANACHE_RPC_URL for local development, fallback to SEPOLIA_RPC_URL for testnet
-  const rpcUrl =
-    process.env.GANACHE_RPC_URL ||
-    process.env.SEPOLIA_RPC_URL ||
-    "http://127.0.0.1:7545";
-
   // For local Ganache, use simpler configuration
   if (rpcUrl.includes("127.0.0.1") || rpcUrl.includes("localhost")) {
     return new ethers.JsonRpcProvider(rpcUrl, undefined, {
@@ -54,18 +49,66 @@ function createProvider() {
   });
 }
 
-const provider = createProvider();
-const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
-const contract = new ethers.Contract(
-  process.env.CONTRACT_ADDRESS,
-  RewardHubTokenABI,
-  wallet
-);
+let provider = null;
+let wallet = null;
+let contract = null;
 
-// Debug: Log wallet configuration on module load
-console.log("🔐 Blockchain Service Initialized:");
-console.log(`   Wallet Address: ${wallet.address}`);
-console.log(`   Contract Address: ${process.env.CONTRACT_ADDRESS}`);
+function getBlockchainConfig() {
+  const rpcUrl = process.env.SEPOLIA_RPC_URL || process.env.GANACHE_RPC_URL;
+  const missing = [];
+
+  if (!rpcUrl) missing.push("SEPOLIA_RPC_URL");
+  if (!process.env.PRIVATE_KEY) missing.push("PRIVATE_KEY");
+  if (!process.env.CONTRACT_ADDRESS) missing.push("CONTRACT_ADDRESS");
+
+  return {
+    rpcUrl,
+    privateKey: process.env.PRIVATE_KEY,
+    contractAddress: process.env.CONTRACT_ADDRESS,
+    missing,
+  };
+}
+
+function initializeBlockchain() {
+  const config = getBlockchainConfig();
+
+  if (config.missing.length > 0) {
+    console.warn(
+      `⚠️  Blockchain service disabled. Missing env vars: ${config.missing.join(", ")}`
+    );
+    return;
+  }
+
+  if (!ethers.isAddress(config.contractAddress)) {
+    console.warn(
+      `⚠️  Blockchain service disabled. Invalid CONTRACT_ADDRESS: ${config.contractAddress}`
+    );
+    return;
+  }
+
+  provider = createProvider(config.rpcUrl);
+  wallet = new ethers.Wallet(config.privateKey, provider);
+  contract = new ethers.Contract(config.contractAddress, RewardHubTokenABI, wallet);
+
+  console.log("🔐 Blockchain Service Initialized:");
+  console.log(`   Wallet Address: ${wallet.address}`);
+  console.log(`   Contract Address: ${config.contractAddress}`);
+}
+
+function requireBlockchain() {
+  if (!contract || !provider || !wallet) {
+    const config = getBlockchainConfig();
+    throw new Error(
+      `Blockchain service is not configured. Missing/invalid env vars: ${
+        config.missing.length ? config.missing.join(", ") : "CONTRACT_ADDRESS"
+      }`
+    );
+  }
+
+  return { provider, wallet, contract };
+}
+
+initializeBlockchain();
 
 // ============================================================================
 // UTILITY FUNCTIONS
@@ -163,6 +206,7 @@ async function withRetry(fn, operationName = "operation") {
  */
 async function validateConnection() {
   try {
+    const { provider } = requireBlockchain();
     await provider.getBlockNumber();
     return true;
   } catch (error) {
@@ -180,6 +224,7 @@ async function validateConnection() {
  */
 const getTokenBalance = async (walletAddress) => {
   return withRetry(async () => {
+    const { contract } = requireBlockchain();
     const balance = await contract.balanceOf(walletAddress);
     const decimals = await getDecimals();
     const human = parseFloat(ethers.formatUnits(balance, decimals));
@@ -197,6 +242,7 @@ const getTokenBalance = async (walletAddress) => {
 const getDecimals = async () => {
   return withRetry(async () => {
     try {
+      const { contract } = requireBlockchain();
       const decimals = await contract.decimals();
       return Number(decimals);
     } catch (err) {
@@ -211,6 +257,7 @@ const getDecimals = async () => {
  */
 const getTotalSupply = async () => {
   return withRetry(async () => {
+    const { contract } = requireBlockchain();
     const totalSupply = await contract.totalSupply();
     const decimals = await getDecimals();
     return parseFloat(ethers.formatUnits(totalSupply, decimals));
@@ -223,6 +270,7 @@ const getTotalSupply = async () => {
 const achievementExists = async (title) => {
   try {
     return await withRetry(async () => {
+      const { contract } = requireBlockchain();
       const achievement = await contract.achievements(title);
       return achievement.rewardAmount > 0;
     }, `achievementExists(${title})`);
@@ -238,6 +286,7 @@ const achievementExists = async (title) => {
 const perkExists = async (title) => {
   try {
     return await withRetry(async () => {
+      const { contract } = requireBlockchain();
       const perk = await contract.perks(title);
       return perk.cost > 0;
     }, `perkExists(${title})`);
@@ -307,6 +356,7 @@ async function sendTransactionWithRetry(contractMethod, args, operationName) {
  */
 const addAchievement = async (title, tokenReward) => {
   try {
+    const { contract } = requireBlockchain();
     console.log(`Adding achievement: "${title}" with reward ${tokenReward}`);
 
     const txHash = await sendTransactionWithRetry(
@@ -327,6 +377,7 @@ const addAchievement = async (title, tokenReward) => {
  */
 const addPerk = async (title, tokenCost) => {
   try {
+    const { contract } = requireBlockchain();
     console.log(`Adding perk: "${title}" with cost ${tokenCost}`);
 
     const txHash = await sendTransactionWithRetry(
@@ -347,6 +398,7 @@ const addPerk = async (title, tokenCost) => {
  */
 const grantAchievement = async (studentAddress, achievementTitle) => {
   try {
+    const { contract } = requireBlockchain();
     console.log(
       `Granting achievement "${achievementTitle}" to ${studentAddress}`
     );
@@ -369,6 +421,7 @@ const grantAchievement = async (studentAddress, achievementTitle) => {
  */
 const rewardStudent = async (studentAddress, facultyAddress, rewardId, reason, amount) => {
   try {
+    const { contract } = requireBlockchain();
     console.log(
       `Awarding student ${studentAddress} ${amount} EDU by ${facultyAddress} for "${reason}" [${rewardId}]`
     );
@@ -414,6 +467,7 @@ const rewardStudent = async (studentAddress, facultyAddress, rewardId, reason, a
  */
 const redeemPerk = async (studentAddress, perkTitle) => {
   try {
+    const { contract } = requireBlockchain();
     console.log(`Redeeming perk "${perkTitle}" for student ${studentAddress}`);
 
     const txHash = await sendTransactionWithRetry(
@@ -434,6 +488,7 @@ const redeemPerk = async (studentAddress, perkTitle) => {
  */
 const isStudentRegistered = async (studentAddress) => {
   try {
+    const { contract } = requireBlockchain();
     if (typeof contract.isStudent !== "function") {
       console.warn("Contract does not have isStudent function");
       return false;
@@ -452,6 +507,7 @@ const isStudentRegistered = async (studentAddress) => {
  */
 const registerStudent = async (studentAddress) => {
   try {
+    const { contract } = requireBlockchain();
     if (typeof contract.registerStudent !== "function") {
       console.warn("Contract does not have registerStudent function");
       return null;
@@ -487,6 +543,7 @@ const mint = async (studentAddress, amount) => {
  */
 const updateAchievement = async (oldTitle, newTitle, newRewardAmount) => {
   try {
+    const { contract } = requireBlockchain();
     console.log(
       `Updating achievement: "${oldTitle}" -> "${newTitle}" with reward ${newRewardAmount}`
     );
@@ -509,6 +566,7 @@ const updateAchievement = async (oldTitle, newTitle, newRewardAmount) => {
  */
 const deactivateAchievement = async (title) => {
   try {
+    const { contract } = requireBlockchain();
     console.log(`Deactivating achievement: "${title}"`);
 
     const txHash = await sendTransactionWithRetry(
@@ -529,6 +587,7 @@ const deactivateAchievement = async (title) => {
  */
 const updatePerk = async (oldTitle, newTitle, newCost) => {
   try {
+    const { contract } = requireBlockchain();
     console.log(
       `Updating perk: "${oldTitle}" -> "${newTitle}" with cost ${newCost}`
     );
@@ -551,6 +610,7 @@ const updatePerk = async (oldTitle, newTitle, newCost) => {
  */
 const deactivatePerk = async (title) => {
   try {
+    const { contract } = requireBlockchain();
     console.log(`Deactivating perk: "${title}"`);
 
     const txHash = await sendTransactionWithRetry(
@@ -592,5 +652,6 @@ module.exports = {
   achievementExists,
   perkExists,
   validateConnection,
+  requireBlockchain,
   CONFIG, // Export config for testing
 };
