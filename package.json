@@ -1,0 +1,14 @@
+{
+  "name": "rewardhub",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "npm install --prefix backend && npm install --prefix frontend && npm run build --prefix frontend",
+    "generate": "npm run build",
+    "start": "npm start --prefix backend",
+    "render-build": "npm run build"
+  },
+  "engines": {
+    "node": "20.x"
+  }
+}

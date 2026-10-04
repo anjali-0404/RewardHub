@@ -13,6 +13,7 @@ const facultyRoutes = require("./routes/faculty");
 const facultyRewardRoutes = require("./routes/facultyRewards");
 require("dotenv").config();
 const cors = require("cors");
+const path = require("path");
 
 const app = express();
 
@@ -37,6 +38,12 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/users/wallet", walletRoutes);
 app.use("/api/faculty", facultyRoutes);
 app.use("/api/faculty-rewards", facultyRewardRoutes);
+
+const frontendDistPath = path.join(__dirname, "..", "frontend", "dist");
+app.use(express.static(frontendDistPath));
+app.get(/^(?!\/api).*/, (req, res) => {
+  res.sendFile(path.join(frontendDistPath, "index.html"));
+});
 
 // Server Start
 const PORT = process.env.PORT || 5000;
