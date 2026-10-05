@@ -18,7 +18,7 @@ services:
       - key: SEPOLIA_RPC_URL
         sync: false
       - key: CONTRACT_ADDRESS
-        value: 0xb5C711f97693a234F482d4D0c2F49c2f7917F7f4
+        value: 0xD1880b4a686fA011498ca415B703762B926bA99a
       - key: VITE_API_BASE_URL
         value: /api
       - key: VITE_BLOCKCHAIN_NETWORK

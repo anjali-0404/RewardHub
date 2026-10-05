@@ -39,6 +39,9 @@ export function getErrorMessage(error) {
   if (error.response?.data?.message) {
     return error.response.data.message;
   }
+  if (error.code === "ERR_NETWORK" || error.message?.includes("Network Error")) {
+    return "Cannot connect to server. Please check your internet connection or verify the backend is running.";
+  }
   if (error.message) {
     return error.message;
   }

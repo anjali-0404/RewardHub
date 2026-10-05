@@ -1,4 +1,5 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/auth");
 const studentRoutes = require("./routes/students");
@@ -23,7 +24,12 @@ app.use(express.json());
 
 // Health check (hosting platforms + monitoring)
 app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", timestamp: new Date().toISOString() });
+  const isDbConnected = mongoose.connection.readyState === 1;
+  res.json({
+    status: "ok",
+    database: isDbConnected ? "connected" : "disconnected",
+    timestamp: new Date().toISOString(),
+  });
 });
 
 // Routes
@@ -49,8 +55,8 @@ app.get(/^(?!\/api).*/, (req, res) => {
 const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
-  await connectDB();
   app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  await connectDB();
 };
 
 startServer();

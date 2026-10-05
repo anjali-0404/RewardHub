@@ -1,8 +1,10 @@
 export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
-export const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || "";
+  import.meta.env.VITE_API_BASE_URL || "/api";
+export const CONTRACT_ADDRESS =
+  import.meta.env.VITE_CONTRACT_ADDRESS ||
+  "0xD1880b4a686fA011498ca415B703762B926bA99a";
 export const BLOCKCHAIN_NETWORK =
-  import.meta.env.VITE_BLOCKCHAIN_NETWORK || "localhost";
+  import.meta.env.VITE_BLOCKCHAIN_NETWORK || "sepolia";
 
 export const USER_ROLES = {
   ADMIN: "admin",

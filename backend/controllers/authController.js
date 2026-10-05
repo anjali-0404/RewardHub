@@ -1,12 +1,19 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 
 // Register
 exports.registerUser = async (req, res) => {
   const { name, email, password, role, walletAddress } = req.body;
 
   try {
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({
+        msg: "Database connection unavailable. Please check MONGO_URI and verify MongoDB Atlas Network Access allows 0.0.0.0/0.",
+      });
+    }
+
     const userExists = await User.findOne({ email });
     if (userExists) return res.status(400).json({ msg: "User already exists" });
 
@@ -28,6 +35,12 @@ exports.registerUser = async (req, res) => {
 // Get current user profile
 exports.getProfile = async (req, res) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({
+        msg: "Database connection unavailable. Please check MONGO_URI and verify MongoDB Atlas Network Access allows 0.0.0.0/0.",
+      });
+    }
+
     const user = await User.findById(req.user.id).select(
       "-password -walletNonce"
     );
@@ -44,6 +57,12 @@ exports.loginUser = async (req, res) => {
   const { email, password } = req.body;
 
   try {
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({
+        msg: "Database connection unavailable. Please check MONGO_URI and verify MongoDB Atlas Network Access allows 0.0.0.0/0.",
+      });
+    }
+
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ msg: "User not found" });
 
@@ -70,6 +89,12 @@ exports.loginUser = async (req, res) => {
 // Update current user profile
 exports.updateProfile = async (req, res) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({
+        msg: "Database connection unavailable. Please check MONGO_URI and verify MongoDB Atlas Network Access allows 0.0.0.0/0.",
+      });
+    }
+
     const userId = req.user.id;
     const { name, walletAddress, designation, department } = req.body;
 
