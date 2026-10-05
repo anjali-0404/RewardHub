@@ -23,6 +23,7 @@ const allowedOrigins = new Set(
   [
     "https://reward-hub-sigma.vercel.app",
     "https://reward-hub.vercel.app",
+    "https://rewardhub-ifup.onrender.com",
     "http://localhost:3000",
     "http://localhost:5173",
     process.env.FRONTEND_URL,
@@ -33,9 +34,16 @@ const allowedOrigins = new Set(
   ].filter(Boolean)
 );
 
+const allowedOriginPatterns = [/^https:\/\/[\w-]+\.vercel\.app$/, /^https:\/\/[\w-]+\.onrender\.com$/];
+
 const corsOptions = {
   origin(origin, callback) {
-    if (!origin || allowedOrigins.has(origin)) {
+    const isAllowed =
+      !origin ||
+      allowedOrigins.has(origin) ||
+      allowedOriginPatterns.some((pattern) => pattern.test(origin));
+
+    if (isAllowed) {
       callback(null, true);
       return;
     }
