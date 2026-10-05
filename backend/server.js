@@ -18,27 +18,41 @@ const path = require("path");
 
 const app = express();
 
-// CORS - explicit config for Vercel frontend
-const corsOptions = {
-  origin: [
+// Middleware
+const allowedOrigins = new Set(
+  [
     "https://reward-hub-sigma.vercel.app",
     "https://reward-hub.vercel.app",
-    "http://localhost:5173",
     "http://localhost:3000",
-  ],
+    "http://localhost:5173",
+    process.env.FRONTEND_URL,
+    ...(process.env.CORS_ORIGINS || "")
+      .split(",")
+      .map((origin) => origin.trim())
+      .filter(Boolean),
+  ].filter(Boolean)
+);
+
+const corsOptions = {
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.has(origin)) {
+      callback(null, true);
+      return;
+    }
+
+    callback(new Error(`CORS blocked origin: ${origin}`));
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
   optionsSuccessStatus: 200,
 };
+
 app.use(cors(corsOptions));
-
-// Handle preflight explicitly
-app.options("*", cors(corsOptions));
-
+app.options(/.*/, cors(corsOptions));
 app.use(express.json());
 
-// Health check
+// Health check (hosting platforms + monitoring)
 app.get("/api/health", (req, res) => {
   const isDbConnected = mongoose.connection.readyState === 1;
   res.json({
