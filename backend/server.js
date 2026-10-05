@@ -18,11 +18,27 @@ const path = require("path");
 
 const app = express();
 
-// Middleware
-app.use(cors());
+// CORS - explicit config for Vercel frontend
+const corsOptions = {
+  origin: [
+    "https://reward-hub-sigma.vercel.app",
+    "https://reward-hub.vercel.app",
+    "http://localhost:5173",
+    "http://localhost:3000",
+  ],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  optionsSuccessStatus: 200,
+};
+app.use(cors(corsOptions));
+
+// Handle preflight explicitly
+app.options("*", cors(corsOptions));
+
 app.use(express.json());
 
-// Health check (hosting platforms + monitoring)
+// Health check
 app.get("/api/health", (req, res) => {
   const isDbConnected = mongoose.connection.readyState === 1;
   res.json({
