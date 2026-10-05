@@ -12,6 +12,7 @@ This repo is configured to deploy as one Render web service. The Express backend
 
 ```text
 MONGO_URI=<your MongoDB Atlas connection string>
+JWT_SECRET=<long random secret for signing login tokens>
 PRIVATE_KEY=<deployer wallet private key>
 SEPOLIA_RPC_URL=<your Sepolia RPC URL>
 ```

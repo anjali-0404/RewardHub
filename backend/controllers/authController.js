@@ -2,6 +2,7 @@ const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
+const { getJwtSecret } = require("../config/auth");
 
 // Register
 exports.registerUser = async (req, res) => {
@@ -71,7 +72,7 @@ exports.loginUser = async (req, res) => {
 
     const token = jwt.sign(
       { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
+      getJwtSecret(),
       {
         expiresIn: "7d",
       }
@@ -82,6 +83,10 @@ exports.loginUser = async (req, res) => {
       user: { id: user._id, name: user.name, role: user.role },
     });
   } catch (err) {
+    if (err.message.includes("JWT_SECRET")) {
+      return res.status(500).json({ msg: err.message });
+    }
+
     res.status(500).json({ msg: err.message });
   }
 };
