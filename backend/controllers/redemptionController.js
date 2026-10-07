@@ -148,6 +148,17 @@ exports.getRedemptionsByStudent = async (req, res) => {
   try {
     const { studentId } = req.params;
 
+    // Students may only view their own redemption history
+    const requesterRole = req.userDoc?.role || req.user?.role;
+    if (
+      requesterRole === "student" &&
+      String(req.userDoc?._id || req.user?.id) !== String(studentId)
+    ) {
+      return res
+        .status(403)
+        .json({ error: "Access denied. You can only view your own redemptions." });
+    }
+
     // Validate ObjectId format
     if (!studentId || studentId === "undefined" || studentId === "null") {
       return res.status(400).json({

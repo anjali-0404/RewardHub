@@ -10,6 +10,15 @@ vi.mock("@/services/facultyReward.service", () => ({
   acknowledgeFacultyReward: vi.fn(),
 }));
 
+// Mock the wallet service (component refreshes balance after loading rewards;
+// an unmocked axios call never settles in happy-dom and keeps `loading` true)
+vi.mock("@/services/wallet.service", () => ({
+  getCalculatedBalance: vi.fn().mockResolvedValue({ availableBalance: 0 }),
+  getWalletStatus: vi.fn().mockResolvedValue({ walletConnected: false }),
+  disconnectWallet: vi.fn().mockResolvedValue({ user: {} }),
+  getTransactions: vi.fn().mockResolvedValue({ transactions: [] }),
+}));
+
 describe("FacultyRecognitions.vue", () => {
   beforeEach(() => {
     setActivePinia(createPinia());

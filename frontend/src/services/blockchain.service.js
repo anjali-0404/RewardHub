@@ -13,11 +13,9 @@ export const getTokenBalance = async (walletAddress) => {
 };
 
 // POST /api/students/register
-export const registerStudentOnChain = async (walletAddress, name) => {
-  const response = await api.post("/students/register", {
-    walletAddress,
-    name,
-  });
+// Backend expects: { name, email, password, walletAddress, message, signature }
+export const registerStudentOnChain = async (payload) => {
+  const response = await api.post("/students/register", payload);
   return response.data;
 };
 

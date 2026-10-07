@@ -6,10 +6,13 @@ const blockchain = require("../blockchain/contract");
 
 /**
  * Escape user input before embedding it in a RegExp (prevents broken queries
- * when the reason contains characters like ( ) + * ? . etc.)
+ * when the reason contains characters like ( ) + * ? . etc.) and caps the
+ * input length so a huge payload cannot mount a Regular Expression
+ * Denial-of-Service against the database.
  */
 function escapeRegExp(str) {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const capped = String(str).slice(0, 200);
+  return capped.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 /**

@@ -6,7 +6,7 @@ const { getJwtSecret } = require("../config/auth");
 
 // Register
 exports.registerUser = async (req, res) => {
-  const { name, email, password, role, walletAddress } = req.body;
+  const { name, email, password, walletAddress } = req.body;
 
   try {
     if (mongoose.connection.readyState !== 1) {
@@ -15,19 +15,39 @@ exports.registerUser = async (req, res) => {
       });
     }
 
-    const userExists = await User.findOne({ email });
+    // Basic validation
+    if (!name || !email || !password) {
+      return res.status(400).json({ msg: "Name, email, and password are required" });
+    }
+    if (typeof password !== "string" || password.length < 8) {
+      return res.status(400).json({ msg: "Password must be at least 8 characters" });
+    }
+
+    // SECURITY: role is always server-assigned. During a basic signup, never
+    // accept role from the client — otherwise anyone can register as admin.
+    const role = "student";
+
+    const normalizedEmail = String(email).toLowerCase().trim();
+    const userExists = await User.findOne({ email: normalizedEmail });
     if (userExists) return res.status(400).json({ msg: "User already exists" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await User.create({
       name,
-      email,
+      email: normalizedEmail,
       password: hashedPassword,
       role,
-      walletAddress,
     });
 
-    res.status(201).json({ user });
+    // Return sanitized user (no password hash)
+    res.status(201).json({
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
   } catch (err) {
     res.status(500).json({ msg: err.message });
   }
@@ -64,8 +84,16 @@ exports.loginUser = async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ msg: "User not found" });
+    if (!email || !password) {
+      return res.status(400).json({ msg: "Email and password are required" });
+    }
+
+    const normalizedEmail = String(email).toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail });
+    if (!user) {
+      // Generic message: do not reveal whether the account exists
+      return res.status(401).json({ msg: "Invalid credentials" });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(401).json({ msg: "Invalid credentials" });
@@ -80,7 +108,7 @@ exports.loginUser = async (req, res) => {
 
     res.json({
       token,
-      user: { id: user._id, name: user.name, role: user.role },
+      user: { id: user._id, name: user.name, email: user.email, role: user.role },
     });
   } catch (err) {
     if (err.message.includes("JWT_SECRET")) {

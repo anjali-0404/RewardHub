@@ -11,6 +11,30 @@ const requireAuth = verifyToken;
 // GET /api/student-achievements
 router.get("/", requireAuth, studentAchievementController.getAllAchievements);
 
+// POST /api/student-achievements/claims (Student uploads an achievement claim)
+router.post(
+  "/claims",
+  requireAuth,
+  requireRole("student"),
+  studentAchievementController.submitClaim
+);
+
+// GET /api/student-achievements/claims/pending (Faculty/Admin reviews queue)
+router.get(
+  "/claims/pending",
+  requireAuth,
+  requireRole("faculty", "admin"),
+  studentAchievementController.getPendingClaims
+);
+
+// POST /api/student-achievements/claims/:id/review (Faculty/Admin approves|rejects)
+router.post(
+  "/claims/:id/review",
+  requireAuth,
+  requireRole("faculty", "admin"),
+  studentAchievementController.reviewClaim
+);
+
 // GET /api/student-achievements/me (current user's achievements)
 router.get("/me", requireAuth, async (req, res) => {
   try {
@@ -44,30 +68,6 @@ router.post(
   requireAuth,
   requireRole("faculty", "admin"),
   studentAchievementController.logAchievement
-);
-
-// POST /api/student-achievements/claims (Student uploads an achievement claim)
-router.post(
-  "/claims",
-  requireAuth,
-  requireRole("student"),
-  studentAchievementController.submitClaim
-);
-
-// GET /api/student-achievements/claims/pending (Faculty/Admin reviews queue)
-router.get(
-  "/claims/pending",
-  requireAuth,
-  requireRole("faculty", "admin"),
-  studentAchievementController.getPendingClaims
-);
-
-// POST /api/student-achievements/claims/:id/review (Faculty/Admin approves|rejects)
-router.post(
-  "/claims/:id/review",
-  requireAuth,
-  requireRole("faculty", "admin"),
-  studentAchievementController.reviewClaim
 );
 
 // GET /api/student-achievements/:id

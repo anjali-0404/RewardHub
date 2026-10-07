@@ -26,8 +26,9 @@ exports.registerUser = async (req, res) => {
       });
     }
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
+    // Check if user already exists (case-insensitive on normalized email)
+    const normalizedEmail = String(email).toLowerCase().trim();
+    const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       return res.status(400).json({ msg: "User with this email already exists" });
     }
@@ -43,7 +44,7 @@ exports.registerUser = async (req, res) => {
     // Create user
     const user = await User.create({
       name,
-      email,
+      email: normalizedEmail,
       password: hashedPassword,
       role,
       walletAddress: walletAddress || null,
@@ -118,7 +119,7 @@ exports.listUsers = async (req, res) => {
 exports.updateUser = async (req, res) => {
   try {
     const { name, email, role, walletAddress } = req.body;
-    
+
     // Find user
     const user = await User.findById(req.params.id);
     if (!user) {
@@ -127,8 +128,16 @@ exports.updateUser = async (req, res) => {
 
     // Update fields if provided
     if (name) user.name = name;
-    if (email) user.email = email;
-    if (role) user.role = role;
+    if (email) user.email = String(email).toLowerCase().trim();
+    if (role) {
+      const validRoles = ["student", "faculty", "admin"];
+      if (!validRoles.includes(role)) {
+        return res
+          .status(400)
+          .json({ msg: `Invalid role. Must be one of: ${validRoles.join(", ")}` });
+      }
+      user.role = role;
+    }
     
     // Handle wallet address update carefully
     if (walletAddress !== undefined) {
