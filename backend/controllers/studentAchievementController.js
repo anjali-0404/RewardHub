@@ -360,12 +360,18 @@ exports.submitClaim = async (req, res) => {
         });
       }
 
-      const existingCustom = await StudentAchievement.findOne({
+      // Case-insensitive duplicate check done in app code (no server-side
+      // regex built from user input — avoids ReDoS and broken-pattern 500s).
+      const pendingClaims = await StudentAchievement.find({
         studentId,
         isClaim: true,
-        claimTitle: { $regex: new RegExp(`^${claimTitle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") },
         status: { $in: ["pending_approval", "pending_onchain", "confirmed"] },
-      });
+      }).select("claimTitle");
+      const existingCustom = pendingClaims.find(
+        (c) =>
+          (c.claimTitle || "").trim().toLowerCase() ===
+          claimTitle.toLowerCase()
+      );
       if (existingCustom) {
         return res.status(400).json({
           msg: "You have already submitted a claim with this title",
